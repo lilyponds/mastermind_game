@@ -1,6 +1,6 @@
 require 'bundler/setup'
 
-class CodeBuilder
+class StartGame
   SET = %w[r g b y o p].freeze
 
   def initialize
@@ -18,46 +18,42 @@ class CodeBuilder
      You get 8 attempts in total."
     @code = [SET.sample, SET.sample, SET.sample, SET.sample]
     @gamekeeper = 0
-
-    # count of all colors in the actual code, as an array
-    @code_color_tab = Array.new(6)
-    # create a tab for number of times a color appears in the actual code and store it as an array
-    # that is inline with the sequence in SET
-    #--------
-    # opro => [1,0,0,0,2,1] -> Incorrect hints when inputted poor exp[1111] vs act[1100]
-    #------
-    SET.each_with_index do |color, index|
-      @code_color_tab[index] = @code.tally.key?(color) ? @code.tally[color] : 0
-    end
     user_input
   end
 
   private
 
   def user_input
+    # create a tab for number of times a color appears in the actual code and store it as an array
+    # that is inline with the sequence in SET
+    @color_count = Array.new(6)
+    SET.each_with_index do |color, index|
+      @color_count[index] = @code.tally.key?(color) ? @code.tally[color] : 0
+    end
     puts 'Enter your guess : '
-    # p o o r
     @input = gets.chomp.downcase.split('')
     @gamekeeper += 1
     checker
   end
 
   def checker
-    # make a copy of color tabs to check for partial matches
-    @color_count = @code_color_tab
     @run_result = Array.new(4, 0)
     # first check if there is perfect color + position guess
     @input.each_with_index do |color, index|
-      if @code[index] == color
-        @run_result[index] = 2
-        @color_count[SET.index(color)] -= 1
-      end
+      next unless @code[index] == color
+
+      @run_result[index] = 2
+      # If there is a match, reduce the value associated to that color in our colors_tab by 1,
+      # meaning, one occurence of the number is accounted for in the current input
+      @color_count[SET.index(color)] -= 1
     end
-    # now check if there is a color match
+    # now check if there is a color guess but in the wrong position
     @run_result.each_with_index do |value, index|
       if value < 2
         if (@color_count[SET.index(@input[index])]).positive?
           @run_result[index] = 1
+          # If there is a match, reduce the value associated to that color in our colors_tab by 1,
+          # meaning, one occurence of the number is accounted for in the current input
           @color_count[SET.index(@input[index])] -= 1
         else
           @run_result[index] = 0
