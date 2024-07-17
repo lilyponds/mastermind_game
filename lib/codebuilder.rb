@@ -1,11 +1,13 @@
 require 'bundler/setup'
+require_relative '../main'
 
 module BreakerCheckerLogic
-  class CodeBuilderChecker
+  class PlayerBuilder
     SET = %w[r g b y o p].freeze
     def initialize
       puts " -----------------------------------------------------
-      You have chosen to be the Code Builder, put in your 4 letterded desired pattern and the computer will try to guess
+      You have chosen to be the Code Builder, put in your
+      4 letterded pattern and the computer will try to guess
       within 8 attempts.
        - r for 🔴
        - g for 🟢
@@ -15,25 +17,20 @@ module BreakerCheckerLogic
        - p for 🟣
 
        Example response - rgby"
-      @code = gets.chomp.downcase.split
+      @code = gets.chomp.downcase.split('')
+      @gamekeeper = 0
+      @input = [SET.sample, SET.sample, SET.sample, SET.sample]
+      @has_this_been_guessed = [@input.join]
+      checker
+    end
+
+    private
+
+    def checker
       @color_count = Array.new(6)
       SET.each_with_index do |color, index|
         @color_count[index] = @code.tally.key?(color) ? @code.tally[color] : 0
       end
-      @gamekeeper = 0
-      computer_guess
-    end
-
-    # Need to add logic for computer to guess better.
-    def computer_guess
-      @input = [SET.sample, SET.sample, SET.sample, SET.sample]
-      puts "The computer guessed #{@input}"
-      @gamekeeper += 1
-      checker
-    end
-
-    # need to be modified
-    def checker
       @run_result = Array.new(4, 0)
       # first check if there is perfect color + position guess
       @input.each_with_index do |color, index|
@@ -57,21 +54,58 @@ module BreakerCheckerLogic
           end
         end
       end
+      @gamekeeper += 1
       output
     end
 
+    def better_guess
+      @better_guess = Array.new(4)
+      @temp_helper = SET.sample
+      if @run_result.all?(0)
+        @input = [SET.sample, SET.sample, SET.sample, SET.sample]
+      else
+        @run_result.each_with_index do |value, index|
+          @better_guess[index] = @input[index] if value == 2
+        end
+        @run_result.each_with_index do |value, index|
+          @temp_helper = @input[index] if value == 1
+        end
+        @run_result.each_with_index do |value, index|
+          @input[index] = if value == 2
+                            @better_guess[index]
+                          elsif value == 1
+                            SET.sample
+                          elsif value == 0
+                            @temp_helper
+                          end
+        end
+      end
+      # puts "Input should be #{@input}"
+      # puts "Better guess is #{@better_guess}"
+      puts "Temp Helper is #{@temp_helper}"
+
+      if @has_this_been_guessed.include?(@input.join)
+        better_guess
+      else
+        @has_this_been_guessed.push(@input.join)
+        checker
+      end
+    end
+
     def output
+      puts "The computer guessed #{@input}"
+      puts "Run Result - #{@run_result}"
       @run_result.each { |value| graphic(value) }
       if @run_result.all?(2)
-        puts 'Winner Winner, you did it!'
+        puts 'The Computer guessed the code.'
         puts 'If you want to play again press y and hit enter : '
-        initialize if gets.chomp.downcase == 'y'
-      elsif @gamekeeper < 9
-        computer_guess
+        NewGame.new if gets.chomp.downcase == 'y'
+      elsif @gamekeeper < 8
+        better_guess
       else
         puts 'Maximum attempts reached, Game Over!'
         puts 'If you want to play again press y and hit enter : '
-        initialize if gets.chomp.downcase == 'y'
+        NewGame.new if gets.chomp.downcase == 'y'
       end
     end
 

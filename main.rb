@@ -16,11 +16,13 @@ class NewGame
     decider
   end
 
+  private
+
   def decider
     if @decider == 1
-      @play = CodeBreakerChecker.new
+      @play = PlayerBreaker.new
     elsif @decider == 2
-      @play = CodeBuilderChecker.new
+      @play = PlayerBuilder.new
     end
   end
 end

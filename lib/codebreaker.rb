@@ -1,6 +1,8 @@
 require 'bundler/setup'
+require_relative '../main'
+
 module BuilderCheckerLogic
-  class CodeBreakerChecker
+  class PlayerBreaker
     SET = %w[r g b y o p].freeze
 
     def initialize
@@ -68,13 +70,13 @@ module BuilderCheckerLogic
       if @run_result.all?(2)
         puts 'Winner Winner, you did it!'
         puts 'If you want to play again press y and hit enter : '
-        initialize if gets.chomp.downcase == 'y'
+        NewGame.new if gets.chomp.downcase == 'y'
       elsif @gamekeeper < 9
         user_input
       else
         puts 'Maximum attempts reached, Game Over!'
         puts 'If you want to play again press y and hit enter : '
-        initialize if gets.chomp.downcase == 'y'
+        NewGame.new if gets.chomp.downcase == 'y'
       end
     end
 
